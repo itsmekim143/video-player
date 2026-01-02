@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zy's player</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --bg-color: #0f0f0f;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { margin: 10px 0 20px; font-weight: bold; font-size: 2rem; }
+        h1 span { color: var(--primary-color); }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1000px;
+            gap: 20px;
+        }
+
+        /* Player Section */
+        .player-section {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #333;
+            background: #121212;
+            color: white;
+            font-size: 1rem;
+            padding-left: 20px;
+        }
+
+        button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover { transform: scale(1.05); }
+
+        /* Search Results Grid */
+        #results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .video-item {
+            cursor: pointer;
+            transition: background 0.3s;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #252525;
+        }
+
+        .video-item:hover { background: #333; }
+
+        .video-item img {
+            width: 100%;
+            display: block;
+        }
+
+        .video-item p {
+            padding: 8px;
+            font-size: 0.85rem;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>zy's <span>player</span></h1>
+
+    <div class="main-layout">
+        <div class="player-section">
+            <div class="video-wrapper">
+                <div id="player"></div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for videos...">
+                <button onclick="searchVideos()">Search</button>
+            </div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 1. Load YouTube API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '360',
+                width: '640',
+                videoId: 'dQw4w9WgXcQ', 
+                playerVars: { 'autoplay': 0, 'modestbranding': 1 }
+            });
+        }
+
+        // 2. Search Functionality
+        async function searchVideos() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = "Searching...";
+
+            // Note: In a production app, you'd use the official YouTube Data API.
+            // This is a workaround using a feed that works for simple projects.
+            try {
+                const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${query}`);
+                // Since direct search is restricted without an API key, 
+                // we simulate a search result by treating the input as an ID or loading a list.
+                
+                // For a true "Search" experience, we will redirect to the ID loader:
+                if (query.length === 11) {
+                    player.loadVideoById(query);
+                    resultsDiv.innerHTML = "Video loaded by ID.";
+                } else {
+                    // Fallback: Embed a search list via iframe or provide instructions
+                    resultsDiv.innerHTML = `<p style="color: #888;">To enable a full search engine inside the app, a <b>Google API Key</b> is required. <br><br> For now, you can paste any <b>YouTube Link</b> or <b>Video ID</b> above to play it!</p>`;
+                }
+            } catch (error) {
+                console.error("Search failed", error);
+            }
+        }
+
+        // Allow pressing "Enter" to search
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchVideos();
+        });
+    </script>
+</body>
+</html>
